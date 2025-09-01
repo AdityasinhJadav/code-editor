@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import * as Y from 'yjs';
@@ -43,7 +42,7 @@ const Editor: React.FC<EditorProps> = ({ fileId }) => {
   }, [monacoBinding]);
 
   return (
-    <div className="flex-grow w-full h-full">
+    <div className="flex-grow w-full h-full min-h-0">
       <MonacoEditor
         height="100%"
         width="100%"
@@ -52,6 +51,7 @@ const Editor: React.FC<EditorProps> = ({ fileId }) => {
         options={{
           minimap: { enabled: true },
           fontSize: 14,
+
           wordWrap: 'on',
           automaticLayout: true,
         }}

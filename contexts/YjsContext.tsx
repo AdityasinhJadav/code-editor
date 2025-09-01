@@ -1,4 +1,3 @@
-
 import React, { createContext, useEffect, useState, ReactNode } from 'react';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
@@ -17,26 +16,20 @@ interface YjsContextType {
 
 export const YjsContext = createContext<YjsContextType | null>(null);
 
-const initializeDefaultFileTree = (fileTree: Y.Array<any>) => {
-    const readmeId = nanoid();
-    const indexHtmlId = nanoid();
-    const styleCssId = nanoid();
-    const scriptJsId = nanoid();
-    const appComponentId = nanoid();
-
+const initializeDefaultFileTree = (fileTree: Y.Array<any>, fileIds: Record<string, string>) => {
     const defaultTree: FileNode[] = [
-        { id: readmeId, name: 'README.md', isFolder: false },
+        { id: fileIds.readme, name: 'README.md', isFolder: false },
         {
             id: nanoid(), name: 'public', isFolder: true, children: [
-                { id: indexHtmlId, name: 'index.html', isFolder: false }
+                { id: fileIds.indexHtml, name: 'index.html', isFolder: false }
             ]
         },
         {
             id: nanoid(), name: 'src', isFolder: true, children: [
-                { id: styleCssId, name: 'style.css', isFolder: false },
-                { id: scriptJsId, name: 'script.js', isFolder: false },
+                { id: fileIds.styleCss, name: 'style.css', isFolder: false },
+                { id: fileIds.scriptJs, name: 'script.js', isFolder: false },
                 { id: nanoid(), name: 'components', isFolder: true, children: [
-                    { id: appComponentId, name: 'App.jsx', isFolder: false }
+                    { id: fileIds.appComponent, name: 'App.jsx', isFolder: false }
                 ]}
             ]
         }
@@ -44,22 +37,38 @@ const initializeDefaultFileTree = (fileTree: Y.Array<any>) => {
     fileTree.push(defaultTree);
 };
 
-const initializeDefaultFileContents = (fileContents: Y.Map<any>) => {
-    // Find IDs by traversing the default structure again (a bit redundant but ensures consistency)
-    const readmeContent = `# CodeSync Editor\n\nWelcome to your real-time collaborative coding environment!\n\nSelect a file to start editing.`;
+const initializeDefaultFileContents = (fileContents: Y.Map<any>, fileIds: Record<string, string>) => {
+    const readmeContent = `# CodeSync Editor\n\nWelcome to your real-time collaborative coding environment!\n\nThis is a demo using Yjs and Monaco Editor.\n\nSelect a file to start editing, or create new files and folders using the icons in the explorer.`;
     const indexHtmlContent = `<!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My App</title>
     <link rel="stylesheet" href="src/style.css">
   </head>
   <body>
     <h1>Hello, World!</h1>
-    <script src="src/script.js"></script>
+    <div id="root"></div>
+    <script src="src/script.js" type="module"></script>
   </body>
 </html>`;
-    const styleCssContent = `body {\n  font-family: sans-serif;\n  background-color: #f0f0f0;\n}`;
-    const scriptJsContent = `console.log('Hello from script.js!');`;
+    const styleCssContent = `body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f0f0f0;
+  color: #333;
+  margin: 2rem;
+}`;
+    const scriptJsContent = `import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './components/App.jsx';
+
+console.log('Hello from script.js!');
+
+const container = document.getElementById('root');
+const root = createRoot(container);
+root.render(<App />);`;
+
     const appComponentContent = `import React from 'react';
 
 const App = () => {
@@ -68,12 +77,11 @@ const App = () => {
 
 export default App;`;
     
-    // This is brittle. In a real app, IDs would be fetched or predetermined.
-    // For this demo, we can't easily get IDs back from initializeDefaultFileTree.
-    // So we'll just pre-populate based on a common pattern.
-    // The robust solution requires a backend to assign and store these IDs.
-    // For the demo, let's keep it simple: we won't pre-populate content to avoid ID mismatches.
-    // The user can create content.
+    fileContents.set(fileIds.readme, new Y.Text(readmeContent));
+    fileContents.set(fileIds.indexHtml, new Y.Text(indexHtmlContent));
+    fileContents.set(fileIds.styleCss, new Y.Text(styleCssContent));
+    fileContents.set(fileIds.scriptJs, new Y.Text(scriptJsContent));
+    fileContents.set(fileIds.appComponent, new Y.Text(appComponentContent));
 };
 
 export const YjsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -97,9 +105,16 @@ export const YjsProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     yProvider.on('sync', (isSynced: boolean) => {
         if(isSynced && yFileTree.length === 0) {
+            const fileIds = {
+              readme: nanoid(),
+              indexHtml: nanoid(),
+              styleCss: nanoid(),
+              scriptJs: nanoid(),
+              appComponent: nanoid(),
+            };
             yDoc.transact(() => {
-                initializeDefaultFileTree(yFileTree);
-                // initializeDefaultFileContents(yFileContents); // Disabled for simplicity
+                initializeDefaultFileTree(yFileTree, fileIds);
+                initializeDefaultFileContents(yFileContents, fileIds);
             });
         }
         setContextValue(prev => prev ? {...prev, isSynced} : prev);
@@ -121,7 +136,7 @@ export const YjsProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   if (!contextValue) {
-    return <div>Loading collaboration session...</div>;
+    return <div className="flex items-center justify-center h-screen bg-[#1e1e1e] text-white">Loading collaboration session...</div>;
   }
 
   return (

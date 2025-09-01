@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useYjs } from '../hooks/useYjs';
 import Tooltip from './ui/Tooltip';
@@ -9,14 +8,16 @@ interface User {
 }
 
 const Header: React.FC = () => {
-  const { awareness } = useYjs();
+  const { awareness, isSynced } = useYjs();
   const [users, setUsers] = useState<Map<number, { user: User }>>(new Map());
 
   useEffect(() => {
     if (!awareness) return;
 
     const updateUsers = () => {
-      setUsers(new Map(awareness.getStates()));
+      // Fix: Cast the result from awareness.getStates() to the expected type for the state.
+      // y-websocket's getStates() returns a generic Map, but we know our state structure.
+      setUsers(new Map(awareness.getStates()) as Map<number, { user: User }>);
     };
 
     awareness.on('change', updateUsers);
@@ -34,7 +35,10 @@ const Header: React.FC = () => {
         <h1 className="text-lg font-semibold text-gray-200">CodeSync</h1>
       </div>
       <div className="flex items-center space-x-2">
-        <div className="text-sm text-gray-400 mr-2">
+        <Tooltip text={isSynced ? 'Synced' : 'Connecting...'}>
+          <div className={`w-3 h-3 rounded-full ${isSynced ? 'bg-green-500' : 'bg-yellow-500'} transition-colors`}></div>
+        </Tooltip>
+        <div className="text-sm text-gray-400">
           {users.size} user{users.size === 1 ? '' : 's'} online
         </div>
         <div className="flex -space-x-2">
