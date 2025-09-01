@@ -1,0 +1,5 @@
+{
+  "name": "Copy of CodeSync - Real-Time Collaborative Editor",
+  "description": "A VS Code-style web application where multiple users can edit code together in real-time. It features a file tree, real-time collaborative editing with presence indicators (cursors and selections), and syntax highlighting.",
+  "requestFramePermissions": []
+}
