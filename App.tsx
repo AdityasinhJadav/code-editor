@@ -5,9 +5,23 @@ import Editor from './components/Editor';
 import Header from './components/Header';
 import { useUiStore } from './hooks/useUiStore';
 import Tabs from './components/Tabs';
+import ResizablePanel from './components/ui/ResizablePanel';
+import LivePreview from './components/LivePreview';
+import LoginModal from './components/LoginModal';
 
 const App: React.FC = () => {
-  const activeFileId = useUiStore((state) => state.activeFileId);
+  const { activeFileId, isPreviewOpen } = useUiStore();
+
+  const editorPane = (
+    <main className="flex-grow flex flex-col min-w-0 h-full">
+      <Tabs />
+      {activeFileId ? (
+        <Editor key={activeFileId} fileId={activeFileId} />
+      ) : (
+        <WelcomeScreen />
+      )}
+    </main>
+  );
 
   return (
     <YjsProvider>
@@ -17,15 +31,15 @@ const App: React.FC = () => {
           <div className="w-64 bg-[#252526] flex-shrink-0 flex flex-col">
             <FileTree />
           </div>
-          <main className="flex-grow flex flex-col min-w-0">
-            <Tabs />
-            {activeFileId ? (
-              <Editor key={activeFileId} fileId={activeFileId} />
-            ) : (
-              <WelcomeScreen />
-            )}
-          </main>
+          <div className="flex-grow flex min-w-0">
+             <ResizablePanel 
+              left={editorPane}
+              right={<LivePreview />}
+              showRightPanel={isPreviewOpen}
+            />
+          </div>
         </div>
+        <LoginModal />
       </div>
     </YjsProvider>
   );

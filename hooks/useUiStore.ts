@@ -6,11 +6,27 @@ interface UiState {
   openFile: (fileId: string) => void;
   closeFile: (fileId: string) => void;
   setActiveFileId: (fileId: string | null) => void;
+  // New state
+  isLoginModalOpen: boolean;
+  openLoginModal: () => void;
+  closeLoginModal: () => void;
+  isPreviewOpen: boolean;
+  togglePreview: () => void;
+  // Mock auth state
+  isAuthenticated: boolean;
+  username: string | null;
+  login: (username: string) => void;
+  logout: () => void;
 }
 
 export const useUiStore = create<UiState>((set, get) => ({
   openFileIds: [],
   activeFileId: null,
+  isLoginModalOpen: false,
+  isPreviewOpen: false,
+  isAuthenticated: false,
+  username: null,
+  
   setActiveFileId: (fileId) => {
     set({ activeFileId: fileId });
   },
@@ -38,4 +54,11 @@ export const useUiStore = create<UiState>((set, get) => ({
     }
     set({ openFileIds: newOpenFileIds, activeFileId: newActiveFileId });
   },
+
+  // New functions
+  openLoginModal: () => set({ isLoginModalOpen: true }),
+  closeLoginModal: () => set({ isLoginModalOpen: false }),
+  togglePreview: () => set(state => ({ isPreviewOpen: !state.isPreviewOpen })),
+  login: (username) => set({ isAuthenticated: true, username, isLoginModalOpen: false }),
+  logout: () => set({ isAuthenticated: false, username: null }),
 }));

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useYjs } from '../hooks/useYjs';
+import { useUiStore } from '../hooks/useUiStore';
 import Tooltip from './ui/Tooltip';
-import { ShareIcon, PlayIcon } from './icons';
+import { ShareIcon, PlayIcon, PanelRightIcon, UserIcon } from './icons';
 
 interface User {
   name: string;
@@ -13,6 +14,14 @@ const Header: React.FC = () => {
   // The user property on an awareness state is not guaranteed, so it should be optional.
   const [users, setUsers] = useState<Map<number, { user?: User }>>(new Map());
   const [copied, setCopied] = useState(false);
+  const { 
+    isPreviewOpen, 
+    togglePreview, 
+    isAuthenticated, 
+    username, 
+    openLoginModal, 
+    logout 
+  } = useUiStore();
 
   useEffect(() => {
     if (!awareness) return;
@@ -43,7 +52,7 @@ const Header: React.FC = () => {
     const treeData = fileTree.toJSON();
     
     const findFileContent = (fileName: string): string => {
-        const fileNode = treeData.find(node => !node.isFolder && node.name === fileName);
+        const fileNode = treeData.find(node => node && !node.isFolder && node.name === fileName);
         if (fileNode) {
             const yText = fileContents.get(fileNode.id);
             return yText ? yText.toString() : '';
@@ -77,20 +86,20 @@ const Header: React.FC = () => {
         <h1 className="text-lg font-semibold text-gray-200">CodeSync</h1>
       </div>
       <div className="flex items-center space-x-4">
-        <Tooltip text="Preview Project (requires index.html)">
+        <Tooltip text="Preview Project in new tab">
             <button onClick={handlePreview} className="bg-gray-700 hover:bg-gray-600 p-2 rounded-md flex items-center gap-2 text-sm text-white">
                 <PlayIcon className="w-4 h-4" />
-                Preview
             </button>
         </Tooltip>
 
-        <Tooltip text={copied ? "Link Copied!" : "Share Project"}>
-            <button onClick={handleShare} className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-md flex items-center gap-2">
-                <ShareIcon className="w-4 h-4" />
-                <span>Share</span>
+         <Tooltip text={isPreviewOpen ? "Hide Live Preview" : "Show Live Preview"}>
+            <button 
+              onClick={togglePreview} 
+              className={`${isPreviewOpen ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'} hover:bg-gray-600 p-2 rounded-md flex items-center gap-2 text-sm`}>
+                <PanelRightIcon className="w-4 h-4" />
             </button>
         </Tooltip>
-        
+
         <div className="flex items-center space-x-2 border-l border-gray-600 pl-4">
             <Tooltip text={isSynced ? 'Synced' : 'Connecting...'}>
                 <div className={`w-3 h-3 rounded-full ${isSynced ? 'bg-green-500' : 'bg-yellow-500'} transition-colors`}></div>
@@ -112,6 +121,29 @@ const Header: React.FC = () => {
                 ) : null
             )}
             </div>
+        </div>
+        
+        <div className="border-l border-gray-600 pl-4 flex items-center gap-4">
+            <Tooltip text={copied ? "Link Copied!" : "Share Project"}>
+                <button onClick={handleShare} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-md flex items-center gap-2 text-sm">
+                    <ShareIcon className="w-4 h-4" />
+                    <span>Share</span>
+                </button>
+            </Tooltip>
+
+             {isAuthenticated ? (
+                <div className="flex items-center gap-2">
+                <span className="text-sm text-white font-medium">Welcome, {username}!</span>
+                <button onClick={logout} className="bg-red-600 hover:bg-red-500 text-white py-2 px-3 rounded-md text-sm">
+                    Logout
+                </button>
+                </div>
+            ) : (
+                <button onClick={openLoginModal} className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-3 rounded-md flex items-center gap-2 text-sm">
+                    <UserIcon className="w-4 h-4" />
+                    <span>Login</span>
+                </button>
+            )}
         </div>
       </div>
     </header>
